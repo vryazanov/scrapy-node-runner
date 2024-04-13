@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "scrapy-node-runner"
+version = "0.1.0"
+description = ""
+authors = ["Vadim Ryazanov"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+scrapy = "^2.11.1"
+kazoo = "^2.10.0"
+
+
+[tool.poetry.group.dev.dependencies]
+isort = "^5.13.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
