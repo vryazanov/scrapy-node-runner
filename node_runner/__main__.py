@@ -8,6 +8,7 @@ from scrapy.utils.log import configure_logging
 from twisted.internet import endpoints
 from twisted.web import resource, server
 
+from node_runner import zk
 from node_runner.executor import Executor
 from node_runner.reactor import get_reactor
 from node_runner.resources.start import Start
@@ -24,26 +25,22 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-if __name__ == '__main__':
-    args = parse_args()
-
-    zk = KazooClient(args.zk_addr)
-    zk.start(timeout=1)
-
-    reactor = get_reactor()
-
-    executor = Executor()
-
+def init_site(executor: Executor) -> server.Session:
     index = resource.Resource()
     index.putChild(b'start', Start(executor))
 
-    site = server.Site(index)
+    return server.Site(index)
+
+if __name__ == '__main__':
+    args = parse_args()
+
+    executor = Executor()
+    site = init_site(executor)
+
+    reactor = get_reactor()
 
     endpoint = endpoints.TCP4ServerEndpoint(reactor, args.port)
     endpoint.listen(site)
-
-    def zk_create():
-        zk.create(f'{args.zk_path}/{socket.gethostname()}', ephemeral=True, makepath=True)
 
     def shutdown(*_):
         d = executor.stop()
@@ -51,8 +48,5 @@ if __name__ == '__main__':
 
     signal.signal(signal.SIGINT, shutdown)
 
-    reactor.callInThread(zk_create)
-    reactor.run()
-
-    zk.stop()
-    zk.close()
+    with zk.connect(args.zk_addr, args.zk_timeout, args.zk_path):
+        reactor.run()
