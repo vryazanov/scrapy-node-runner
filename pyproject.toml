@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "scrapy-node-runner"
+name = "node_runner"
 version = "0.1.0"
 description = ""
 authors = ["Vadim Ryazanov"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "src"}]
+packages = [{include = "node_runner"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -19,3 +19,6 @@ isort = "^5.13.2"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.plugins."scrapy.commands"]
+"node" = "node_runner.commands:NodeRunnerCommand"
