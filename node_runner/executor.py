@@ -1,34 +1,40 @@
+import dataclasses
 import datetime
+import enum
+import typing
 
 from scrapy.crawler import Crawler, CrawlerProcess
 from twisted.internet.defer import Deferred
 
 from node_runner.exceptions import DuplicateError
+from node_runner.executions import Execution, Executions
 
 
 class Executor:
 
-    def __init__(self, process: CrawlerProcess):
+    def __init__(self, process: CrawlerProcess, executions: Executions):
         self.process = process
-        self.active: dict[str, tuple[Crawler, datetime.datetime]] = {}
+        self.executions = executions
 
     def schedule(self, id: str, spider: str) -> Deferred:
-        if id in self.active:
-            raise DuplicateError
+        for execution in self.executions:
+            if execution.id == id:
+                raise DuplicateError
 
-        crawler = self.process.create_crawler(spider)
-        self.active[id] = (crawler, datetime.datetime.now(datetime.UTC))
+        execution = Execution.create(id, self.process.create_crawler(spider))
+        self.executions.append(execution)
 
         def done(_):
-            self.active.pop(id)
+            execution.finish()
         
-        d = self.process.crawl(crawler)
+        d = self.process.crawl(execution.crawler)
         d.addBoth(done)
 
         return d
 
     def stop(self, id: str) -> bool:
-        crawler, _ = self.active.get(id, ('', datetime.datetime.now()))
-
-        if crawler:
-            crawler.stop()
+        for execution in self.executions.active():
+            if execution.id == id:
+                execution.stop()
+                return True
+        return False

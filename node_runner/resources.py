@@ -4,8 +4,10 @@ import json
 from twisted.web import resource
 from twisted.web.http import Request
 
-from node_runner.executor import Executor
 from node_runner.exceptions import DuplicateError
+from node_runner.executions import Execution, Executions
+from node_runner.executor import Executor
+
 
 def serialize_datetime(obj): 
     if isinstance(obj, datetime.datetime): 
@@ -52,20 +54,42 @@ class Stop(resource.Resource):
 
         return b'{"success": true}'
 
+
+def render_execution(execution: Execution) -> dict:
+    return {
+        'id': execution.id,
+        'spider': execution.crawler.spider.name,
+        'status': execution.status,
+        'stats': execution.crawler.stats.get_stats(),
+        'duration': int(execution.duration().total_seconds()),
+    }
+
+
 class Active(resource.Resource):
     isLeaf = True
 
-    def __init__(self, executor: Executor):
-        self.executor = executor
+    def __init__(self, executions: Executions):
+        self.executions = executions
 
     def render_POST(self, request):
         request.setHeader('Content-Type', 'application/json')
-        executions = []
-        for id, (crawler, started_at) in self.executor.active.items():
-            duration = datetime.datetime.now(datetime.UTC) - started_at
-            executions.append({
-                'id': id,
-                'stats': crawler.stats and crawler.stats.get_stats(),
-                'duration': int(duration.total_seconds())
-            })
-        return json.dumps({'executions': executions}, default=serialize_datetime).encode()
+
+        return json.dumps({'executions': [
+            render_execution(execution)
+            for execution in self.executions.active()
+        ]}, default=serialize_datetime).encode()
+
+
+class History(resource.Resource):
+    isLeaf = True
+
+    def __init__(self, executions: Executions):
+        self.executions = executions
+
+    def render_POST(self, request):
+        request.setHeader('Content-Type', 'application/json')
+
+        return json.dumps({'executions': [
+            render_execution(execution)
+            for execution in self.executions.history()
+        ]}, default=serialize_datetime).encode()

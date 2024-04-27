@@ -6,8 +6,9 @@ from twisted.internet import endpoints, reactor
 from twisted.web import resource, server
 
 from node_runner import zk
+from node_runner.executions import Executions
 from node_runner.executor import Executor
-from node_runner.resources import Active, Start, Stop
+from node_runner.resources import Active, History, Start, Stop
 
 
 class NodeRunnerCommand(ScrapyCommand):
@@ -30,13 +31,15 @@ class NodeRunnerCommand(ScrapyCommand):
         parser.add_argument('--zk-path', type=str, default='/node-runner')
 
     def run(self, args: typing.List[str], opts: argparse.Namespace) -> None:
-        executor = Executor(self.crawler_process)
+        executions = Executions([])
+
+        executor = Executor(self.crawler_process, executions)
 
         index = resource.Resource()
         index.putChild(b'start', Start(executor))
         index.putChild(b'stop', Stop(executor))
-        index.putChild(b'active', Active(executor))
-
+        index.putChild(b'active', Active(executions))
+        index.putChild(b'history', History(executions))
 
         endpoint = endpoints.TCP4ServerEndpoint(reactor, opts.port)
         endpoint.listen(server.Site(index))
