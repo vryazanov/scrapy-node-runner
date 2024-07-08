@@ -1,9 +1,5 @@
-import dataclasses
-import datetime
-import enum
-import typing
 
-from scrapy.crawler import Crawler, CrawlerProcess
+from scrapy.crawler import CrawlerProcess
 from twisted.internet.defer import Deferred
 
 from node_runner.exceptions import DuplicateError

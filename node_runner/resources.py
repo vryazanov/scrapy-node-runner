@@ -3,6 +3,7 @@ import json
 
 from twisted.web import resource
 from twisted.web.http import Request
+from scrapy.settings import Settings
 
 from node_runner.exceptions import DuplicateError
 from node_runner.executions import Execution, Executions
@@ -93,3 +94,17 @@ class History(resource.Resource):
             render_execution(execution)
             for execution in self.executions.history()
         ]}, default=serialize_datetime).encode()
+
+
+class Meta(resource.Resource):
+    isLeaf = True
+
+    def __init__(self, settings: Settings):
+        self.settings = settings
+
+    def render_POST(self, request):
+        request.setHeader('Content-Type', 'application/json')
+
+        return json.dumps({
+            'project_name': self.settings.get('BOT_NAME'),
+        }).encode()

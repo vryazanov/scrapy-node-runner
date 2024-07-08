@@ -8,7 +8,7 @@ from twisted.web import resource, server
 from node_runner import zk
 from node_runner.executions import Executions
 from node_runner.executor import Executor
-from node_runner.resources import Active, History, Start, Stop
+from node_runner.resources import Active, History, Meta, Start, Stop
 
 
 class NodeRunnerCommand(ScrapyCommand):
@@ -40,6 +40,7 @@ class NodeRunnerCommand(ScrapyCommand):
         index.putChild(b'stop', Stop(executor))
         index.putChild(b'active', Active(executions))
         index.putChild(b'history', History(executions))
+        index.putChild(b'meta', Meta(self.settings))
 
         endpoint = endpoints.TCP4ServerEndpoint(reactor, opts.port)
         endpoint.listen(server.Site(index))
