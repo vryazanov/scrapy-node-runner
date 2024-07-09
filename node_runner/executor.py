@@ -7,7 +7,6 @@ from node_runner.executions import Execution, Executions
 
 
 class Executor:
-
     def __init__(self, process: CrawlerProcess, executions: Executions):
         self.process = process
         self.executions = executions
@@ -18,7 +17,7 @@ class Executor:
                 raise DuplicateError
 
         execution = Execution.create(id, self.process.create_crawler(spider))
-        self.executions.append(execution)
+        self.executions.insert(execution)
 
         def done(_):
             execution.finish()

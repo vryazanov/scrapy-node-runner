@@ -63,6 +63,8 @@ def render_execution(execution: Execution) -> dict:
         'spider': execution.crawler.spider.name,
         'status': execution.status,
         'stats': execution.crawler.stats.get_stats(),
+        'started_at': execution.started_at,
+        'finished_at': execution.finished_at,
         'duration': int(execution.duration().total_seconds()),
     }
 

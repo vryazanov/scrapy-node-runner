@@ -54,8 +54,17 @@ class Executions(collections.UserList):
     def __init__(self, data: typing.List[Execution]):
         self.data = data
 
+    def insert(self, execution: Execution):
+        self.data.insert(0, execution)
+
     def active(self) -> typing.List[Execution]:
-        return Executions([e for e in self.data if e.status == Status.running])
+        return Executions([e for e in self.data if e.status in (
+            Status.running,
+            Status.terminating,
+        )])
 
     def history(self) -> typing.List[Execution]:
-        return Executions([e for e in self.data if e.status != Status.running])
+        return Executions([e for e in self.data if e.status not in (
+            Status.running,
+            Status.terminating,
+        )])
