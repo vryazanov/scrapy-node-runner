@@ -32,6 +32,7 @@ class Start(resource.Resource):
             self.executor.schedule(
                 data['id'],
                 data['spider'],
+                data.get('args') or {},
             )
         except DuplicateError:
             success = False

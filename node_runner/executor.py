@@ -12,7 +12,7 @@ class Executor:
         self.process = process
         self.executions = executions
 
-    def schedule(self, id: str, spider: str) -> Deferred:
+    def schedule(self, id: str, spider: str, args: dict) -> Deferred:
         for execution in self.executions:
             if execution.id == id:
                 raise DuplicateError
@@ -23,7 +23,7 @@ class Executor:
         def done(_):
             execution.finish()
         
-        d = self.process.crawl(execution.crawler)
+        d = self.process.crawl(execution.crawler, **args)
         d.addBoth(done)
 
         return d

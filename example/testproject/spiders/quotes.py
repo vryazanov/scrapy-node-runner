@@ -13,9 +13,13 @@ class QuotesSpider(scrapy.Spider):
         'https://quotes.toscrape.com/'
     ]
 
+    def __init__(self, limit: int = 10):
+        self.limit = limit
+
     def parse(self, response):
-        self.log(f'Crawled: {response.url}', level=logging.INFO)
+        self.log(f'Limit: {self.limit}. Crawled: {response.url}', level=logging.INFO)
 
         extractor = scrapy.linkextractors.LinkExtractor()
-        for link in extractor.extract_links(response):
-            yield scrapy.Request(link.url, callback=self.parse)
+        for idx, link in enumerate(extractor.extract_links(response)):
+            if idx < self.limit:
+                yield scrapy.Request(link.url, callback=self.parse)
